@@ -1,24 +1,31 @@
-import LigneBus from './LigneBus';
-import './ListeLignes.css';
+import './LigneBus.css';
 
-function ListeLignes({ lignes }) {
+function LigneBus({
+  numero,
+  depart,
+  arrivee,
+  arrets,
+  estSelectionnee,
+  onClick
+}) {
   return (
-    <div className="liste-lignes">
-      <h2 className="liste-titre">Lignes Dakar Dem Dikk</h2>
-      <p className="liste-description">
-        {lignes.length} lignes disponibles
-      </p>
-      {lignes.map(ligne => (
-        <LigneBus
-          key={ligne.id}
-          numero={ligne.numero}
-          depart={ligne.depart}
-          arrivee={ligne.arrivee}
-          arrets={ligne.arrets}
-        />
-      ))}
+    <div
+      className={`ligne-bus ${
+        estSelectionnee ? 'ligne-bus-active' : ''
+      }`}
+      onClick={onClick}
+    >
+      <div className="ligne-numero">{numero}</div>
+
+      <div className="ligne-info">
+        <span className="ligne-trajet">
+          {depart} &rarr; {arrivee}
+        </span>
+
+        <span className="ligne-arrets">{arrets} arrets</span>
+      </div>
     </div>
   );
 }
 
-export default ListeLignes;
+export default LigneBus;
