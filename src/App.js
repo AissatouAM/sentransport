@@ -9,6 +9,7 @@ import Footer from './Footer';
 function App() {
   const [recherche, setRecherche] = useState("");
   const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
+  const [nbRecherches, setNbRecherches] = useState(0);
 
   const lignes = [
   {
@@ -142,14 +143,29 @@ function App() {
       <main className="contenu">
         <Recherche
           valeur={recherche}
-          onChange={setRecherche}
+          onChange={(valeur) => {
+            setRecherche(valeur);
+            setNbRecherches(nbRecherches + 1);
+          }}
         />
+
+        <p>Vous avez effectue {nbRecherches} recherche(s)</p>
+
+        <button className='effacer' onClick={() => setRecherche("")}>
+          Effacer
+        </button>
 
         <p className="resultat-recherche">
           {lignesFiltrees.length} ligne
           {lignesFiltrees.length > 1 ? 's' : ''} trouvee
           {lignesFiltrees.length > 1 ? 's' : ''}
         </p>
+
+        {
+          lignesFiltrees.length === 0 && (
+            <p>Aucune ligne trouvée</p>
+          )
+        }
 
         {lignesFiltrees.map(ligne => (
           <LigneBus
