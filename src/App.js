@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './App.css';
 import Header from './Header';
 import Recherche from './Recherche';
@@ -7,181 +7,90 @@ import DetailLigne from './DetailLigne';
 import Footer from './Footer';
 
 function App() {
+  // 1. Déclaration des différents états (States)
+  const [lignes, setLignes] = useState([]);
+  const [chargement, setChargement] = useState(true);
+  const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState("");
   const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
-  const [nbRecherches, setNbRecherches] = useState(0);
 
-  const lignes = [
-  {
-    id: 1,
-    numero: "1",
-    depart: "Parcelles Assainies",
-    arrivee: "Plateau",
-    arrets: 14,
-    couleur: "#FF0000",
-    listeArrets: [
-      "Parcelles U14",
-      "Parcelles U10",
-      "Camberene",
-      "Patte d'Oie",
-      "Grand Dakar",
-      "Colobane",
-      "Ponty",
-      "Plateau"
-    ]
-  },
-  {
-    id: 2,
-    numero: "7",
-    depart: "Guediawaye",
-    arrivee: "Place Obe",
-    arrets: 18,
-    couleur: "#0000FF",
-    listeArrets: [
-      "Guediawaye",
-      "Pikine",
-      "Thiaroye",
-      "Keur Massar",
-      "Grand Yoff",
-      "Parcelles",
-      "Liberte 6",
-      "Place Obe"
-    ]
-  },
-  {
-    id: 3,
-    numero: "15",
-    depart: "Pikine",
-    arrivee: "Medina",
-    arrets: 12,
-    couleur: "#00AA00",
-    listeArrets: [
-      "Pikine Centre",
-      "Thiaroye Gare",
-      "Hann",
-      "Colobane",
-      "Fass",
-      "Medina"
-    ]
-  },
-  {
-    id: 4,
-    numero: "23",
-    depart: "Ouakam",
-    arrivee: "Grand Dakar",
-    arrets: 10,
-    couleur: "#FF9900",
-    listeArrets: [
-      "Ouakam Village",
-      "Mermoz",
-      "Fann",
-      "Point E",
-      "Liberte 5",
-      "Grand Dakar"
-    ]
-  },
-  {
-    id: 5,
-    numero: "8",
-    depart: "Almadies",
-    arrivee: "Colobane",
-    arrets: 16,
-    couleur: "#FF00FF",
-    listeArrets: [
-      "Almadies",
-      "Ngor",
-      "Yoff",
-      "Ouest Foire",
-      "Liberte 6",
-      "Colobane"
-    ]
-  },
-  {
-    id: 6,
-    numero: "12",
-    depart: "Yoff",
-    arrivee: "Sandaga",
-    arrets: 11,
-    couleur: "#00FFFF",
-    listeArrets: [
-      "Yoff Village",
-      "Aeroport LSS",
-      "Parcelles U17",
-      "Grand Yoff",
-      "HLM",
-      "Sandaga"
-    ]
-  }
-];
+  // 2. Chargement asynchrone des données depuis l'API Flask au démarrage
+  useEffect(() => {
+    fetch("http://localhost:5000/lignes")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Erreur serveur : " + response.status);
+        }
+        return response.json();
+      })
+      .then(data => {
+        setLignes(data);
+        setChargement(false);
+      })
+      .catch(error => {
+        setErreur(error.message);
+        setChargement(false);
+      });
+  }, []);
 
-  const lignesFiltrees = lignes.filter(
-    l =>
-      l.depart.toLowerCase().includes(
-        recherche.toLowerCase()
-      ) ||
-      l.arrivee.toLowerCase().includes(
-        recherche.toLowerCase()
-      ) ||
-      l.numero.includes(recherche)
+  // 3. Filtrage dynamique des lignes en fonction du mot-clé
+  const lignesFiltrees = lignes.filter(l =>
+    l.depart.toLowerCase().includes(recherche.toLowerCase()) ||
+    l.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
+    l.numero.toString().includes(recherche)
   );
 
+  // 4. Gestion de la sélection et désélection au clic sur une ligne
   function handleClickLigne(ligne) {
-    if (
-      ligneSelectionnee &&
-      ligneSelectionnee.id === ligne.id
-    ) {
+    if (ligneSelectionnee && ligneSelectionnee.id === ligne.id) {
       setLigneSelectionnee(null);
     } else {
       setLigneSelectionnee(ligne);
     }
   }
 
+  // 5. Rendu conditionnel : Écran de chargement
+  if (chargement) {
+    return (
+      <div className="message-chargement">
+        <p>Chargement des lignes...</p>
+      </div>
+    );
+  }
+
+  // 6. Rendu conditionnel : Écran d'erreur (si l'API Flask ne répond pas)
+  if (erreur) {
+    return (
+      <div className="message-erreur">
+        <h3>Impossible de charger les lignes.</h3>
+        <p className="erreur-detail">{erreur}</p>
+        <p>Vérifiez que le serveur Flask est lancé (python api/app.py).</p>
+      </div>
+    );
+  }
+
+  // 7. Rendu de l'interface principale (quand les données sont chargées)
   return (
-    <div className="App">
+    <div className="app-container">
       <Header />
+      
+      <main className="content">
+        <Recherche recherche={recherche} setRecherche={setRecherche} />
 
-      <main className="contenu">
-        <Recherche
-          valeur={recherche}
-          onChange={(valeur) => {
-            setRecherche(valeur);
-            setNbRecherches(nbRecherches + 1);
-          }}
-        />
-
-        <p>Vous avez effectue {nbRecherches} recherche(s)</p>
-
-        <button className='effacer' onClick={() => setRecherche("")}>
-          Effacer
-        </button>
-
-        <p className="resultat-recherche">
-          {lignesFiltrees.length} ligne
-          {lignesFiltrees.length > 1 ? 's' : ''} trouvee
-          {lignesFiltrees.length > 1 ? 's' : ''}
+        <p className="result-count">
+          {lignesFiltrees.length} ligne{lignesFiltrees.length > 1 ? 's' : ''} trouvée{lignesFiltrees.length > 1 ? 's' : ''}
         </p>
 
-        {
-          lignesFiltrees.length === 0 && (
-            <p>Aucune ligne trouvée</p>
-          )
-        }
-
-        {lignesFiltrees.map(ligne => (
-          <LigneBus
-            key={ligne.id}
-            numero={ligne.numero}
-            depart={ligne.depart}
-            arrivee={ligne.arrivee}
-            arrets={ligne.arrets}
-            couleur={ligne.couleur}
-            estSelectionnee={
-              ligneSelectionnee &&
-              ligneSelectionnee.id === ligne.id
-            }
-            onClick={() => handleClickLigne(ligne)}
-          />
-        ))}
+        <div className="lignes-liste">
+          {lignesFiltrees.map(ligne => (
+            <LigneBus 
+              key={ligne.id} 
+              ligne={ligne} 
+              onClick={() => handleClickLigne(ligne)} 
+              estSelectionnee={ligneSelectionnee && ligneSelectionnee.id === ligne.id}
+            />
+          ))}
+        </div>
 
         {ligneSelectionnee && (
           <DetailLigne ligne={ligneSelectionnee} />

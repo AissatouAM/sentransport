@@ -1,14 +1,14 @@
 import './Recherche.css';
 
-function Recherche({ valeur, onChange }) {
+function Recherche({ recherche, setRecherche }) {
   return (
     <div className="recherche">
       <input
         type="text"
         className="recherche-input"
         placeholder="Rechercher une ligne (depart, arrivee)..."
-        value={valeur}
-        onChange={e => onChange(e.target.value)}
+        value={recherche}
+        onChange={e => setRecherche(e.target.value)}
       />
     </div>
   );
