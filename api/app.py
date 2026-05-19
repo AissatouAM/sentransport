@@ -1,13 +1,18 @@
 import json
+import os
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app)
 
-# Charger les donnees depuis le fichier JSON
-with open("lignes_ddd.json", "r") as f:
-    lignes = json.load(f)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Helper pour charger les donnees depuis le fichier JSON à chaque requête
+def charger_lignes():
+    with open(os.path.join(BASE_DIR, "lignes_ddd.json"), "r", encoding="utf-8") as f:
+        return json.load(f)
+
 
 @app.route("/")
 def accueil():
@@ -18,10 +23,18 @@ def accueil():
 
 @app.route("/lignes")
 def get_lignes():
+    lignes = charger_lignes()
     return jsonify(lignes)
+
+@app.route("/arrets")
+def get_arrets():
+    with open(os.path.join(BASE_DIR, "arrets.json"), "r", encoding="utf-8") as f:
+        arrets = json.load(f)
+    return jsonify(arrets)
 
 @app.route("/lignes/<int:ligne_id>")
 def get_ligne(ligne_id):
+    lignes = charger_lignes()
     ligne = next(
         (l for l in lignes if l["id"] == ligne_id),
         None
@@ -32,18 +45,20 @@ def get_ligne(ligne_id):
 
 
 #Exercice 1
-@app.route("/arrets")
-def get_arrets():
-    arrets = set()
-    for ligne in lignes:
-        if "listeArrets" in ligne:
-            for arret in ligne["listeArrets"]:
-                arrets.add(arret)
-    return jsonify(list(arrets))
+#@app.route("/arrets")
+#def get_arrets():
+ #   lignes = charger_lignes()
+  #  arrets = set()
+   # for ligne in lignes:
+    #    if "listeArrets" in ligne:
+     #       for arret in ligne["listeArrets"]:
+      #          arrets.add(arret)
+    #return jsonify(list(arrets))
 
 #Exercice 2
 @app.route("/stats")
 def get_stats():
+    lignes = charger_lignes()
     nb_lignes = len(lignes)
     total_arrets = 0
 
@@ -72,6 +87,7 @@ def get_stats():
 #Exercice 3
 @app.route("/lignes/recherche")
 def rechercher_lignes():
+    lignes = charger_lignes()
     # Récupération du paramètre 'q' dans l'URL. Si absent, la valeur par défaut est ""
     mot_cle = request.args.get("q", "").strip().lower()
     

@@ -97,5 +97,21 @@
       "HLM",
       "Sandaga"
     ]
+  },
+  
+  {
+    "id": 7,
+    "numero": "401",
+    "depart": "Dakar",
+    "arrivee": "Saint-Louis",
+    "listeArrets": ["Gare de Dakar", "Thies", "Louga", "Gare de Saint-Louis"]
+  },
+  
+  {
+    "id": 8,
+    "numero": "219",
+    "depart": "Pikine",
+    "arrivee": "Guediawaye",
+    "listeArrets": ["Tally Bou Bess", "Marché Jeudi", "Hamo 4"]
   }
 ]

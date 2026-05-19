@@ -5,17 +5,20 @@ import Recherche from './Recherche';
 import LigneBus from './LigneBus';
 import DetailLigne from './DetailLigne';
 import Footer from './Footer';
+import Carte from './Carte'
+import 'leaflet/dist/leaflet.css'
 
 function App() {
-  // 1. Déclaration des différents états (States)
   const [lignes, setLignes] = useState([]);
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState(null);
   const [recherche, setRecherche] = useState("");
   const [ligneSelectionnee, setLigneSelectionnee] = useState(null);
 
-  // 2. Chargement asynchrone des données depuis l'API Flask au démarrage
-  useEffect(() => {
+  // Fonction réutilisable (Exercice 1)
+  const chargerDonnees = () => {
+    setChargement(true);
+    setErreur(null);
     fetch("http://localhost:5000/lignes")
       .then(response => {
         if (!response.ok) {
@@ -31,51 +34,70 @@ function App() {
         setErreur(error.message);
         setChargement(false);
       });
+  };
+
+  useEffect(() => {
+    chargerDonnees();
   }, []);
 
-  // 3. Filtrage dynamique des lignes en fonction du mot-clé
-  const lignesFiltrees = lignes.filter(l =>
-    l.depart.toLowerCase().includes(recherche.toLowerCase()) ||
-    l.arrivee.toLowerCase().includes(recherche.toLowerCase()) ||
-    l.numero.toString().includes(recherche)
-  );
+  const lignesFiltrees = lignes.filter(l => {
+    const num = l.numero || l.Numero || "";
+    const dep = l.depart || l.Depart || "";
+    const arr = l.arrivee || l.Arrivee || "";
+    return (
+      dep.toLowerCase().includes(recherche.toLowerCase()) ||
+      arr.toLowerCase().includes(recherche.toLowerCase()) ||
+      num.toString().includes(recherche)
+    );
+  });
 
-  // 4. Gestion de la sélection et désélection au clic sur une ligne
+  // Requête à la demande au clic (Exercice 3)
   function handleClickLigne(ligne) {
     if (ligneSelectionnee && ligneSelectionnee.id === ligne.id) {
       setLigneSelectionnee(null);
-    } else {
-      setLigneSelectionnee(ligne);
+      return;
     }
+
+    fetch(`http://localhost:5000/lignes/${ligne.id}`)
+      .then(response => {
+        if (!response.ok) throw new Error("Erreur lors de la récupération des détails");
+        return response.json();
+      })
+      .then(data => {
+        setLigneSelectionnee(data);
+      })
+      .catch(err => alert(err.message));
   }
 
-  // 5. Rendu conditionnel : Écran de chargement
   if (chargement) {
     return (
       <div className="message-chargement">
         <p>Chargement des lignes...</p>
+        <button onClick={chargerDonnees}>Réessayer</button>
       </div>
     );
   }
 
-  // 6. Rendu conditionnel : Écran d'erreur (si l'API Flask ne répond pas)
   if (erreur) {
     return (
       <div className="message-erreur">
         <h3>Impossible de charger les lignes.</h3>
         <p className="erreur-detail">{erreur}</p>
-        <p>Vérifiez que le serveur Flask est lancé (python api/app.py).</p>
+        <button onClick={chargerDonnees} className="btn-recharger">🔄 Réessayer</button>
       </div>
     );
   }
 
-  // 7. Rendu de l'interface principale (quand les données sont chargées)
   return (
     <div className="app-container">
       <Header />
       
       <main className="content">
         <Recherche recherche={recherche} setRecherche={setRecherche} />
+
+        <button onClick={chargerDonnees} className="btn-recharger">
+          🔄 Recharger les données
+        </button>
 
         <p className="result-count">
           {lignesFiltrees.length} ligne{lignesFiltrees.length > 1 ? 's' : ''} trouvée{lignesFiltrees.length > 1 ? 's' : ''}
@@ -87,7 +109,6 @@ function App() {
               key={ligne.id} 
               ligne={ligne} 
               onClick={() => handleClickLigne(ligne)} 
-              estSelectionnee={ligneSelectionnee && ligneSelectionnee.id === ligne.id}
             />
           ))}
         </div>
@@ -95,6 +116,7 @@ function App() {
         {ligneSelectionnee && (
           <DetailLigne ligne={ligneSelectionnee} />
         )}
+        <Carte />
       </main>
 
       <Footer />
